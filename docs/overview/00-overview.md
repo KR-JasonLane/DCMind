@@ -51,8 +51,9 @@ AI 에이전트를 갖춘 웹 PACS(Picture Archiving and Communication System).
 - **Phase 2 — 웹 뷰어**: 스터디 목록, 캔버스 DICOM 렌더링, window/level·확대·이동·기본 측정.
 - **Phase 3 — 병원 플로우 / RIS 기능 계층 + Mock 액터**: DCMind가 흡수하는 RIS 워크플로우 기능 — 오더 접수(FHIR ServiceRequest→Accession Number 발급→워크리스트), UPS-RS풍 Modality Worklist, 검사 상태 추적(오더됨→촬영완료→판독대기→판독완료), 판독 리포트 작성·관리, 리포트 EMR 회신(FHIR DiagnosticReport). Mock 액터 — Modality Mock(워크리스트 조회→샘플 DICOM→STOW-RS), EMR Mock(오더 발행·리포트 수신).
   - *범위 제외 (RIS 기능 중 비채택)*: 검사실 예약·스케줄링 최적화, 수가 청구·수납, 부서 통계·행정.
+  - *스토리지 운영 기능*: 용량·통계 조회 API, 무결성 검증 잡(저장 시 기록한 SHA-256 기준), 고아 데이터 탐지. (관리자 대시보드 UI는 옵션)
 - **Phase 4 — LLM 에이전트**: PACS API를 도구로 호출(검색·열기·과거검사 요약·리포트 초안·EMR 회신), 뷰어에 챗 UI 통합.
-- **Phase 5+ (미래)**: 압축 전송구문, DIMSE C-STORE, Vision AI 연동, 인증 강화.
+- **Phase 5+ (미래)**: 압축 전송구문, DIMSE C-STORE, Vision AI 연동, 인증 강화, 스토리지 라이프사이클(보존 정책·계층화·백업).
 
 ---
 
