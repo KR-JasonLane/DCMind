@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCMind — 시스템 관리</title>
+<style>
+  :root{
+    --green:#00704a; --spring:#00a862; --forest:#1e3932; --warm:#f1f8f4; --white:#fafafa;
+    --cream:#ede9e1; --mist:#d4e9e2; --gold:#cba258; --berry:#c44d58; --error:#e75b52;
+    --charcoal:#1e1e1e; --body:#4a4a4a; --sec:#6b6b6b; --dis:#8c8c8c;
+    --border:#d4d4d4; --lgray:#e8e8e8; --bgray:#f2f0eb;
+    --sh1:0 2px 8px rgba(30,57,50,.08); --sh2:0 4px 16px rgba(30,57,50,.12);
+    --sans:"Pretendard Variable",Pretendard,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;
+    --mono:"JetBrains Mono","D2Coding",Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--sans);background:var(--warm);color:var(--body);font-size:14px;line-height:1.57}
+  a{text-decoration:none;color:inherit}
+
+  .nav{position:sticky;top:0;z-index:10;height:72px;background:rgba(250,250,250,.85);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--lgray);display:flex;align-items:center;gap:32px;padding:0 48px}
+  .brand{font-size:22px;font-weight:700;color:var(--green);letter-spacing:-.25px}
+  .nav a.link{font-weight:600;color:var(--charcoal);padding:6px 2px;border-bottom:2px solid transparent}
+  .nav a.link.active,.nav a.link:hover{border-bottom-color:var(--green);color:var(--green)}
+  .nav .spacer{flex:1}
+  .user{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--charcoal)}
+  .avatar{width:36px;height:36px;border-radius:50%;background:var(--forest);color:#fff;display:flex;
+    align-items:center;justify-content:center;font-size:13px;font-weight:700}
+
+  .page{max-width:1280px;margin:0 auto;padding:40px 48px 96px}
+  h1{font-size:36px;font-weight:700;letter-spacing:-.25px;color:var(--charcoal);line-height:1.22}
+  .sub{margin-top:6px;color:var(--sec)}
+
+  /* KPI */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:32px}
+  .kpi{background:#fff;border:1px solid var(--lgray);border-radius:16px;padding:20px;box-shadow:var(--sh1)}
+  .kpi .label{font-size:12px;font-weight:600;color:var(--sec);letter-spacing:.2px}
+  .kpi .value{font-size:28px;font-weight:700;color:var(--charcoal);line-height:1.29;margin-top:4px}
+  .kpi .value small{font-size:13px;font-weight:600;color:var(--sec);margin-left:4px}
+  .kpi .delta{font-size:12px;margin-top:4px;color:var(--sec)}
+  .kpi .delta.ok{color:var(--green);font-weight:600}
+  .kpi .delta.warn{color:var(--error);font-weight:600}
+
+  section{margin-top:32px}
+  .card{background:#fff;border:1px solid var(--lgray);border-radius:16px;box-shadow:var(--sh1);padding:24px}
+  .card h2{font-size:18px;font-weight:600;color:var(--charcoal);line-height:1.44}
+  .card .desc{font-size:12px;color:var(--sec);margin-top:2px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+
+  /* 스토리지 게이지 */
+  .gauge{margin-top:20px}
+  .gauge .nums{display:flex;justify-content:space-between;align-items:baseline}
+  .gauge .big{font-size:28px;font-weight:700;color:var(--charcoal)}
+  .gauge .big small{font-size:14px;font-weight:600;color:var(--sec)}
+  .gauge .pct{font-family:var(--mono);font-size:13px;color:var(--sec)}
+  .bar{position:relative;height:14px;background:var(--bgray);border-radius:9999px;margin-top:12px;overflow:visible}
+  .bar .fill{position:absolute;inset:0;width:78%;background:linear-gradient(90deg,var(--spring),var(--green));border-radius:9999px}
+  .bar .thres{position:absolute;left:85%;top:-5px;bottom:-5px;width:2px;background:var(--berry);border-radius:2px}
+  .bar .thres::after{content:"임계 85%";position:absolute;top:-20px;left:50%;transform:translateX(-50%);
+    font-size:10px;font-weight:700;color:var(--berry);white-space:nowrap}
+  .gauge .foot{margin-top:14px;font-size:12px;color:var(--sec)}
+
+  /* 막대 차트 (최근 7일 수신) */
+  .chart{display:flex;align-items:flex-end;gap:10px;height:150px;margin-top:24px;padding-top:16px}
+  .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+  .col .v{font-family:var(--mono);font-size:11px;color:var(--sec)}
+  .col .bar-v{width:100%;max-width:44px;background:var(--green);border-radius:4px 4px 0 0;transition:background .15s}
+  .col:hover .bar-v{background:var(--forest)}
+  .col.today .bar-v{background:var(--spring)}
+  .col .d{font-size:11px;color:var(--sec)}
+  .col.today .d{color:var(--green);font-weight:700}
+
+  /* 모달리티 가로 막대 */
+  .hrow{display:grid;grid-template-columns:52px 1fr 64px;align-items:center;gap:12px;margin-top:14px}
+  .hrow .m{font-size:12px;font-weight:600;color:var(--charcoal)}
+  .hrow .track{height:12px;background:var(--bgray);border-radius:9999px;overflow:hidden}
+  .hrow .fill{height:100%;background:var(--green);border-radius:9999px}
+  .hrow .n{font-family:var(--mono);font-size:12px;color:var(--sec);text-align:right}
+
+  /* 이벤트 로그 */
+  .events{margin-top:20px}
+  .ev{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:12px;margin-top:10px;font-size:13px}
+  .ev .t{font-family:var(--mono);font-size:11px;color:var(--sec);white-space:nowrap;padding-top:2px}
+  .ev b{color:var(--charcoal);font-weight:600}
+  .ev.ok{background:var(--mist);border-left:4px solid var(--green);color:var(--green)}
+  .ev.ok b{color:var(--green)}
+  .ev.err{background:#fdeeed;border-left:4px solid var(--error)}
+  .ev.err b{color:var(--error)}
+  .ev.info{background:var(--warm);border-left:4px solid var(--border)}
+  .ev .mono{font-family:var(--mono);font-size:11px}
+
+  /* 연동 상태 */
+  .links{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:20px}
+  .link-card{border:1px solid var(--lgray);border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:12px}
+  .dot{width:10px;height:10px;border-radius:50%;flex:none}
+  .dot.on{background:var(--spring);box-shadow:0 0 0 4px rgba(0,168,98,.15)}
+  .dot.off{background:var(--dis)}
+  .link-card b{display:block;font-size:13px;color:var(--charcoal)}
+  .link-card small{font-size:11px;color:var(--sec)}
+
+  details.table-view{margin-top:16px}
+  details.table-view summary{font-size:12px;font-weight:600;color:var(--green);cursor:pointer}
+  details.table-view table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}
+  details.table-view th,details.table-view td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--lgray)}
+  details.table-view th{color:var(--sec);font-weight:600}
+
+  @media (max-width:1000px){
+    .nav{padding:0 24px}.page{padding:24px 24px 64px}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .grid2{grid-template-columns:1fr}
+    .links{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="index.html">DCMind</a>
+  <a class="link" href="worklist.html">워크리스트</a>
+  <a class="link" href="viewer.html">뷰어</a>
+  <a class="link active" href="admin.html">관리</a>
+  <span class="spacer"></span>
+  <span class="user"><span class="avatar">관</span>시스템 관리자</span>
+</nav>
+
+<main class="page">
+  <h1>시스템 관리</h1>
+  <p class="sub">2026-07-17 10:20 기준 · 시스템이 정상 동작 중입니다.</p>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">총 스터디</div>
+      <div class="value">12,481<small>건</small></div>
+      <div class="delta">인스턴스 2,904,113개</div>
+    </div>
+    <div class="kpi">
+      <div class="label">오늘 수신</div>
+      <div class="value">1,842<small>인스턴스</small></div>
+      <div class="delta ok">정상 흐름</div>
+    </div>
+    <div class="kpi">
+      <div class="label">수신 실패 (24시간)</div>
+      <div class="value">3<small>건</small></div>
+      <div class="delta warn">미지원 전송구문 3건</div>
+    </div>
+    <div class="kpi">
+      <div class="label">무결성 검증</div>
+      <div class="value">통과</div>
+      <div class="delta">최근 실행 07-17 03:00 · 불일치 0건</div>
+    </div>
+  </div>
+
+  <section class="grid2">
+    <div class="card">
+      <h2>스토리지 사용량</h2>
+      <p class="desc">원본 DICOM 파일 스토리지 · 임계 도달 시 수신이 중단될 수 있습니다.</p>
+      <div class="gauge">
+        <div class="nums">
+          <span class="big">6.2 TB <small>/ 8.0 TB</small></span>
+          <span class="pct">78%</span>
+        </div>
+        <div class="bar" role="img" aria-label="스토리지 사용량 78%, 임계치 85%">
+          <div class="fill"></div>
+          <div class="thres"></div>
+        </div>
+        <p class="foot">현재 증가 속도(일 약 41GB) 기준, 임계(85%) 도달까지 약 <b style="color:var(--charcoal)">14일</b> 남았습니다.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>최근 7일 수신 현황</h2>
+      <p class="desc">일별 저장 인스턴스 수</p>
+      <div class="chart" role="img" aria-label="최근 7일 일별 수신 인스턴스 막대 차트">
+        <div class="col"><div class="bar-v" style="height:52%"></div><span class="d">7/11</span></div>
+        <div class="col"><div class="bar-v" style="height:64%"></div><span class="d">7/12</span></div>
+        <div class="col"><div class="bar-v" style="height:30%"></div><span class="d">7/13</span></div>
+        <div class="col"><div class="bar-v" style="height:26%"></div><span class="d">7/14</span></div>
+        <div class="col"><span class="v">3,120</span><div class="bar-v" style="height:88%"></div><span class="d">7/15</span></div>
+        <div class="col"><div class="bar-v" style="height:71%"></div><span class="d">7/16</span></div>
+        <div class="col today"><span class="v">1,842</span><div class="bar-v" style="height:53%"></div><span class="d">오늘</span></div>
+      </div>
+      <details class="table-view">
+        <summary>표로 보기</summary>
+        <table>
+          <thead><tr><th>날짜</th><th>수신 인스턴스</th></tr></thead>
+          <tbody>
+            <tr><td>7/11</td><td>1,810</td></tr><tr><td>7/12</td><td>2,240</td></tr>
+            <tr><td>7/13</td><td>1,050</td></tr><tr><td>7/14</td><td>910</td></tr>
+            <tr><td>7/15</td><td>3,120</td></tr><tr><td>7/16</td><td>2,488</td></tr>
+            <tr><td>오늘</td><td>1,842</td></tr>
+          </tbody>
+        </table>
+      </details>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div class="card">
+      <h2>모달리티별 스터디 분포</h2>
+      <p class="desc">전체 12,481건 기준</p>
+      <div class="hrow"><span class="m">CT</span><div class="track"><div class="fill" style="width:88%"></div></div><span class="n">5,214</span></div>
+      <div class="hrow"><span class="m">CR</span><div class="track"><div class="fill" style="width:66%"></div></div><span class="n">3,902</span></div>
+      <div class="hrow"><span class="m">MR</span><div class="track"><div class="fill" style="width:38%"></div></div><span class="n">2,247</span></div>
+      <div class="hrow"><span class="m">US</span><div class="track"><div class="fill" style="width:15%"></div></div><span class="n">871</span></div>
+      <div class="hrow"><span class="m">기타</span><div class="track"><div class="fill" style="width:4%"></div></div><span class="n">247</span></div>
+    </div>
+
+    <div class="card">
+      <h2>최근 이벤트</h2>
+      <p class="desc">수신·검증·연동 이벤트 로그</p>
+      <div class="events">
+        <div class="ev err"><span class="t">09:58</span><span><b>수신 거절</b> — 지원하지 않는 전송구문입니다 (<span class="mono">1.2.840.10008.1.2.4.90</span> · JPEG2000). 비압축 파일인지 확인하세요.</span></div>
+        <div class="ev ok"><span class="t">03:00</span><span><b>무결성 검증 완료</b> — 2,904,113개 인스턴스 해시 일치. 불일치 0건, 고아 파일 0건.</span></div>
+        <div class="ev info"><span class="t">어제 22:14</span><span><b>스터디 저장</b> — <span class="mono">ACC-20260716-0091</span> 외 12건, 총 3,208 인스턴스 정상 수신.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>연동 상태</h2>
+    <p class="desc">외부 시스템 연결 상태</p>
+    <div class="links">
+      <div class="link-card"><span class="dot on"></span><span><b>EMR (FHIR)</b><small>ServiceRequest 수신 · DiagnosticReport 회신 정상</small></span></div>
+      <div class="link-card"><span class="dot on"></span><span><b>모달리티 워크리스트</b><small>마지막 조회 4분 전 · CT실 2, CR실 1</small></span></div>
+      <div class="link-card"><span class="dot on"></span><span><b>AI 에이전트</b><small>응답 지연 정상 범위 · 오늘 호출 214회</small></span></div>
+    </div>
+  </section>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCMind — 판독 뷰어</title>
+<style>
+  :root{
+    --green:#00704a; --spring:#00a862; --forest:#1e3932; --forest-deep:#16211d;
+    --mist:#d4e9e2; --gold:#cba258; --berry:#c44d58; --white:#fafafa;
+    --ink:#e6efe9; --ink-sec:#9dbcb0; --line:rgba(255,255,255,.08);
+    --sans:"Pretendard Variable",Pretendard,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;
+    --mono:"JetBrains Mono","D2Coding",Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{font-family:var(--sans);background:var(--forest-deep);color:var(--ink);font-size:14px;line-height:1.57;
+    display:grid;grid-template-rows:64px 1fr;overflow:hidden}
+  a{text-decoration:none;color:inherit}
+
+  /* ── 상단 바 ── */
+  .topbar{background:var(--forest);border-bottom:1px solid var(--line);display:flex;align-items:center;
+    gap:20px;padding:0 20px}
+  .brand{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.25px}
+  .brand span{color:var(--spring)}
+  .pt{display:flex;flex-direction:column;line-height:1.3;border-left:1px solid var(--line);padding-left:20px}
+  .pt b{font-size:14px;font-weight:600;color:#fff}
+  .pt small{font-family:var(--mono);font-size:11px;color:var(--ink-sec)}
+  .study{font-size:12px;color:var(--mist)}
+  .study .badge-stat{background:var(--berry);color:#fff;border-radius:9999px;padding:3px 10px;
+    font-size:10px;font-weight:700;letter-spacing:.4px;margin-left:8px;text-transform:uppercase}
+  .tools{margin-left:auto;display:flex;gap:6px}
+  .tool{border:none;background:transparent;color:var(--mist);font:600 12px var(--sans);
+    border-radius:9999px;padding:9px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s}
+  .tool:hover{background:rgba(255,255,255,.07)}
+  .tool.active{background:var(--green);color:#fff}
+  .leave{background:var(--white);color:var(--green);border:none;border-radius:9999px;
+    padding:10px 18px;font:600 13px var(--sans);letter-spacing:.3px;cursor:pointer;margin-left:12px}
+  .leave:hover{background:#fff}
+
+  /* ── 본문 3단 ── */
+  .stage{display:grid;grid-template-columns:92px 1fr 380px;min-height:0}
+
+  /* 시리즈 스트립 */
+  .series{background:var(--forest);border-right:1px solid var(--line);padding:12px 10px;overflow-y:auto}
+  .series h2{font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--ink-sec);text-transform:uppercase;
+    text-align:center;margin-bottom:10px}
+  .thumb{width:72px;height:72px;border-radius:10px;background:#000;border:2px solid transparent;
+    margin-bottom:10px;cursor:pointer;position:relative;overflow:hidden}
+  .thumb.active{border-color:var(--spring)}
+  .thumb:hover{border-color:rgba(0,168,98,.5)}
+  .thumb .n{position:absolute;bottom:4px;right:6px;font-family:var(--mono);font-size:9px;color:var(--ink-sec)}
+  .thumb .grad{position:absolute;inset:0}
+
+  /* 캔버스 */
+  .canvas{position:relative;background:#000;min-width:0}
+  .canvas svg.scan{width:100%;height:100%;display:block}
+  .hud{position:absolute;font-family:var(--mono);font-size:11px;color:var(--ink-sec);letter-spacing:.3px;line-height:1.6}
+  .hud b{color:var(--mist);font-weight:400}
+  /* 측정 오버레이 */
+  .measure-label{position:absolute;top:37%;left:52%;background:rgba(30,57,50,.85);backdrop-filter:blur(4px);
+    border:1px solid rgba(0,168,98,.4);color:var(--mist);font-family:var(--mono);font-size:11px;
+    border-radius:8px;padding:4px 10px}
+  .scroller{position:absolute;right:14px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;
+    align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--ink-sec)}
+  .scroller .track{width:3px;height:180px;background:rgba(255,255,255,.12);border-radius:2px;position:relative}
+  .scroller .pos{position:absolute;top:38%;left:-2px;width:7px;height:24px;background:var(--spring);border-radius:4px}
+
+  /* ── 우측 패널 ── */
+  .panel{background:var(--forest);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+  .tabs{display:flex;gap:4px;padding:12px 16px 0}
+  .tab{flex:1;border:none;background:transparent;color:var(--ink-sec);font:600 13px var(--sans);
+    padding:10px;border-radius:9999px;cursor:pointer}
+  .tab.on{background:rgba(255,255,255,.08);color:#fff}
+  .agent-head{margin:12px 16px;border-radius:16px;padding:18px 20px;color:#fff;
+    background:linear-gradient(135deg,var(--green),var(--forest-deep));display:flex;gap:12px;align-items:center}
+  .spark{width:26px;height:26px;flex:none;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,#e8cf9b,var(--gold));box-shadow:0 0 14px rgba(203,162,88,.55)}
+  .agent-head b{font-size:15px;font-weight:600;display:block}
+  .agent-head small{font-size:11px;color:var(--mist)}
+  .chat{flex:1;overflow-y:auto;padding:4px 16px;display:flex;flex-direction:column;gap:12px;min-height:0}
+  .msg{max-width:88%;border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.55}
+  .msg.user{align-self:flex-end;background:var(--green);color:#fff;border-bottom-right-radius:4px}
+  .msg.ai{align-self:flex-start;background:rgba(255,255,255,.05);border:1px solid var(--line);
+    border-left:3px solid var(--gold);color:var(--ink);border-bottom-left-radius:4px}
+  .msg.ai .who{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  .msg.ai .who .spark{width:12px;height:12px;box-shadow:0 0 6px rgba(203,162,88,.5)}
+  .msg.ai .who span{font-size:10px;font-weight:700;letter-spacing:.4px;color:var(--gold);text-transform:uppercase}
+  .msg.ai ul{margin:6px 0 0 16px}
+  .msg.ai li{margin-bottom:2px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:10px 16px 0}
+  .chip{border:1px solid rgba(203,162,88,.45);color:var(--gold);background:transparent;
+    border-radius:9999px;padding:8px 14px;font:600 12px var(--sans);cursor:pointer}
+  .chip:hover{background:rgba(203,162,88,.12)}
+  .composer{display:flex;gap:8px;padding:14px 16px;border-top:1px solid var(--line)}
+  .composer input{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:9999px;
+    padding:12px 18px;font:400 13px var(--sans);color:#fff;outline:none}
+  .composer input::placeholder{color:var(--ink-sec)}
+  .composer input:focus{border-color:var(--spring)}
+  .composer button{border:none;background:var(--gold);color:var(--forest);font:700 13px var(--sans);
+    border-radius:9999px;padding:0 20px;cursor:pointer}
+  .composer button:hover{background:#d8b46e}
+
+  /* 리포트 초안 */
+  .report{margin:0 16px 14px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.04);padding:16px}
+  .report .rhead{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .report .rhead h3{font-size:14px;font-weight:600;color:#fff;flex:1}
+  .badge-ai{background:var(--gold);color:var(--forest);border-radius:9999px;padding:3px 10px;
+    font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+  .report p{font-size:12px;color:var(--ink);line-height:1.6}
+  .report p + p{margin-top:6px}
+  .report .dim{color:var(--ink-sec)}
+  .ractions{display:flex;gap:8px;margin-top:14px}
+  .btn-light{flex:1;background:var(--white);color:var(--green);border:none;border-radius:9999px;
+    padding:11px 0;font:600 13px var(--sans);letter-spacing:.3px;cursor:pointer}
+  .btn-light:hover{background:#fff}
+  .btn-ghost{flex:1;background:transparent;color:var(--mist);border:1px solid rgba(255,255,255,.25);
+    border-radius:9999px;padding:11px 0;font:600 13px var(--sans);cursor:pointer}
+  .btn-ghost:hover{border-color:var(--mist)}
+
+  @media (max-width:1100px){
+    .stage{grid-template-columns:92px 1fr}
+    .panel{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  :focus-visible{outline:2px solid var(--spring);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">DC<span>Mind</span></a>
+  <div class="pt">
+    <b>김민준 <span style="font-weight:400;color:var(--ink-sec)">남/58</span></b>
+    <small>P-1002941 · ACC-20260717-0031</small>
+  </div>
+  <span class="study">흉부 CT (조영) · 2026-07-17 09:42<span class="badge-stat">STAT</span></span>
+  <div class="tools" role="toolbar" aria-label="영상 도구">
+    <button class="tool active">윈도우/레벨</button>
+    <button class="tool">확대</button>
+    <button class="tool">이동</button>
+    <button class="tool">길이 측정</button>
+    <button class="tool">초기화</button>
+  </div>
+  <a href="worklist.html"><button class="leave">워크리스트로</button></a>
+</header>
+
+<div class="stage">
+  <!-- 시리즈 스트립 -->
+  <aside class="series" aria-label="시리즈 목록">
+    <h2>시리즈</h2>
+    <div class="thumb active"><div class="grad" style="background:radial-gradient(circle at 50% 45%,#3c3c3c,#0a0a0a)"></div><span class="n">1/214</span></div>
+    <div class="thumb"><div class="grad" style="background:radial-gradient(circle at 45% 55%,#333,#050505)"></div><span class="n">2/214</span></div>
+    <div class="thumb"><div class="grad" style="background:radial-gradient(circle at 55% 40%,#2e2e2e,#000)"></div><span class="n">3/98</span></div>
+    <div class="thumb"><div class="grad" style="background:radial-gradient(circle at 50% 50%,#383838,#080808)"></div><span class="n">4/98</span></div>
+  </aside>
+
+  <!-- 캔버스 -->
+  <main class="canvas" aria-label="영상 캔버스">
+    <svg class="scan" viewBox="0 0 800 640" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <radialGradient id="lungL" cx="50%" cy="50%"><stop offset="0%" stop-color="#464646"/><stop offset="65%" stop-color="#222"/><stop offset="100%" stop-color="#000"/></radialGradient>
+        <radialGradient id="lungR" cx="50%" cy="50%"><stop offset="0%" stop-color="#414141"/><stop offset="65%" stop-color="#1f1f1f"/><stop offset="100%" stop-color="#000"/></radialGradient>
+        <filter id="soft"><feGaussianBlur stdDeviation="10"/></filter>
+        <filter id="soft2"><feGaussianBlur stdDeviation="4"/></filter>
+      </defs>
+      <ellipse cx="300" cy="330" rx="130" ry="185" fill="url(#lungL)" filter="url(#soft)"/>
+      <ellipse cx="520" cy="330" rx="130" ry="185" fill="url(#lungR)" filter="url(#soft)"/>
+      <rect x="392" y="80" width="34" height="500" fill="#333" filter="url(#soft)"/>
+      <path d="M190 190 Q410 130 630 190" stroke="#3a3a3a" stroke-width="12" fill="none" filter="url(#soft2)"/>
+      <path d="M176 260 Q410 200 644 260" stroke="#363636" stroke-width="12" fill="none" filter="url(#soft2)"/>
+      <path d="M170 332 Q410 272 650 332" stroke="#323232" stroke-width="12" fill="none" filter="url(#soft2)"/>
+      <path d="M176 404 Q410 348 644 404" stroke="#2e2e2e" stroke-width="12" fill="none" filter="url(#soft2)"/>
+      <ellipse cx="452" cy="288" rx="14" ry="12" fill="#6d6d6d" filter="url(#soft2)"/>
+      <!-- 측정선 -->
+      <line x1="438" y1="288" x2="466" y2="288" stroke="#00a862" stroke-width="1.5"/>
+      <line x1="438" y1="283" x2="438" y2="293" stroke="#00a862" stroke-width="1.5"/>
+      <line x1="466" y1="283" x2="466" y2="293" stroke="#00a862" stroke-width="1.5"/>
+    </svg>
+    <span class="hud" style="top:14px;left:16px"><b>김민준</b> · 남/58<br>P-1002941</span>
+    <span class="hud" style="top:14px;right:16px;text-align:right"><b>흉부 CT (조영)</b><br>2026-07-17 09:42</span>
+    <span class="hud" style="bottom:14px;left:16px">W 1500 / L -600 · 5.0mm</span>
+    <span class="hud" style="bottom:14px;right:16px">확대 100% · 82 / 214</span>
+    <span class="measure-label">34.2 mm</span>
+    <div class="scroller" aria-hidden="true"><span>82</span><div class="track"><div class="pos"></div></div><span>214</span></div>
+  </main>
+
+  <!-- 우측 패널 -->
+  <aside class="panel" aria-label="AI 어시스턴트 및 리포트">
+    <div class="tabs">
+      <button class="tab on">AI 어시스턴트</button>
+      <button class="tab">리포트</button>
+    </div>
+    <div class="agent-head">
+      <span class="spark" aria-hidden="true"></span>
+      <div><b>DCMind 어시스턴트</b><small>이 스터디의 맥락을 보고 있습니다</small></div>
+    </div>
+    <div class="chat">
+      <div class="msg user">이 환자 과거 흉부 검사 있어?</div>
+      <div class="msg ai">
+        <div class="who"><span class="spark" aria-hidden="true"></span><span>AI 응답</span></div>
+        과거 흉부 검사 2건을 찾았습니다.
+        <ul>
+          <li>2025-11-03 · 흉부 CT (조영) — 우상엽 결절 8mm 관찰</li>
+          <li>2024-06-12 · 흉부 X선 (PA) — 특이 소견 없음</li>
+        </ul>
+        2025-11 검사와 비교해 보시겠어요?
+      </div>
+      <div class="msg user">비교해서 리포트 초안 만들어줘.</div>
+      <div class="msg ai">
+        <div class="who"><span class="spark" aria-hidden="true"></span><span>AI 응답</span></div>
+        이전 검사 대비 우상엽 결절의 크기 변화를 중심으로 초안을 작성했습니다. 아래 리포트 탭에서 확인하세요 — <b style="color:var(--gold)">최종 검토와 서명은 판독의의 몫입니다.</b>
+      </div>
+    </div>
+    <div class="chips">
+      <button class="chip">과거 검사 요약</button>
+      <button class="chip">유사 케이스 검색</button>
+      <button class="chip">EMR로 회신</button>
+    </div>
+    <div class="composer">
+      <input type="text" placeholder="검사에 대해 물어보세요" aria-label="에이전트에게 질문">
+      <button>전송</button>
+    </div>
+    <div class="report">
+      <div class="rhead"><h3>리포트 초안</h3><span class="badge-ai">AI 초안</span></div>
+      <p><span class="dim">소견:</span> 우상엽에 약 34mm 크기의 조영증강 결절이 관찰됨. 2025-11-03 검사(8mm) 대비 크기 증가.</p>
+      <p><span class="dim">결론:</span> 우상엽 결절의 간격 성장 — 조직검사 등 추가 정밀검사 권고.</p>
+      <div class="ractions">
+        <button class="btn-ghost">수정</button>
+        <button class="btn-light">검토 후 전송</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+</body>
+</html>

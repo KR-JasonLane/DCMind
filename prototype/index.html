@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCMind — 프로토타입</title>
+<style>
+  :root{
+    --green:#00704a; --spring:#00a862; --forest:#1e3932; --warm:#f1f8f4; --white:#fafafa;
+    --cream:#ede9e1; --mist:#d4e9e2; --gold:#cba258; --berry:#c44d58;
+    --charcoal:#1e1e1e; --body:#4a4a4a; --sec:#6b6b6b; --dis:#8c8c8c;
+    --border:#d4d4d4; --lgray:#e8e8e8; --bgray:#f2f0eb;
+    --sh1:0 2px 8px rgba(30,57,50,.08); --sh2:0 4px 16px rgba(30,57,50,.12); --sh3:0 6px 20px rgba(30,57,50,.25);
+    --sans:"Pretendard Variable",Pretendard,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;
+    --mono:"JetBrains Mono","D2Coding",Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--sans);background:var(--warm);color:var(--body);font-size:14px;line-height:1.57}
+  a{text-decoration:none;color:inherit}
+
+  .nav{position:sticky;top:0;z-index:10;height:72px;background:rgba(250,250,250,.85);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--lgray);display:flex;align-items:center;gap:32px;padding:0 48px}
+  .brand{font-size:22px;font-weight:700;color:var(--green);letter-spacing:-.25px}
+  .brand small{font-size:11px;font-weight:600;color:var(--sec);letter-spacing:.4px;margin-left:8px;text-transform:uppercase}
+  .nav a.link{font-weight:600;color:var(--charcoal);padding:6px 2px;border-bottom:2px solid transparent}
+  .nav a.link:hover{border-bottom-color:var(--green);color:var(--green)}
+  .nav .spacer{flex:1}
+  .pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;
+    padding:12px 24px;font-size:14px;font-weight:600;letter-spacing:.3px;min-height:44px;cursor:pointer;border:none;transition:background .15s}
+  .pill.primary{background:var(--green);color:#fff}
+  .pill.primary:hover{background:var(--forest)}
+  .pill.outline{background:transparent;color:var(--green);border:1px solid var(--green)}
+  .pill.outline:hover{background:rgba(0,112,74,.06)}
+
+  /* ── Hero: 두 세계 ── */
+  .hero{max-width:1280px;margin:0 auto;padding:64px 48px 48px}
+  .hero h1{font-size:48px;font-weight:700;line-height:1.08;letter-spacing:-.5px;color:var(--charcoal)}
+  .hero h1 .g{color:var(--green)}
+  .hero p.lede{font-size:16px;line-height:1.63;margin-top:16px;max-width:560px}
+  .split{max-width:1280px;margin:24px auto 0;padding:0 48px;display:grid;grid-template-columns:1fr 1fr;gap:0;
+    border-radius:20px;overflow:hidden;box-shadow:var(--sh2)}
+  .split .world{padding:40px 36px;min-height:300px;position:relative}
+  .world.light{background:linear-gradient(180deg,#fafafa,#f1f8f4)}
+  .world.dark{background:linear-gradient(160deg,#1e3932,#16211d)}
+  .world h2{font-size:22px;font-weight:600;line-height:1.36}
+  .world.light h2{color:var(--charcoal)} .world.dark h2{color:#fff}
+  .world p{margin-top:8px;font-size:14px}
+  .world.dark p{color:var(--mist)}
+  .world .tag{display:inline-block;border-radius:9999px;padding:4px 12px;font-size:11px;font-weight:700;
+    letter-spacing:.4px;text-transform:uppercase;margin-bottom:16px}
+  .world.light .tag{background:var(--mist);color:var(--green)}
+  .world.dark .tag{background:rgba(203,162,88,.16);color:var(--gold)}
+  /* 미니 워크리스트 프리뷰 */
+  .mini-rows{margin-top:24px;background:#fff;border:1px solid var(--lgray);border-radius:16px;overflow:hidden;box-shadow:var(--sh1)}
+  .mini-row{display:flex;align-items:center;gap:12px;height:44px;padding:0 16px;border-bottom:1px solid var(--lgray);font-size:12px}
+  .mini-row:last-child{border-bottom:none}
+  .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .mini-row b{color:var(--charcoal);font-weight:600}
+  .mini-row .mono{font-family:var(--mono);color:var(--sec);font-size:11px}
+  .mini-row .badge{margin-left:auto;border-radius:9999px;padding:3px 10px;font-size:10px;font-weight:700}
+  /* 미니 뷰어 프리뷰 */
+  .mini-canvas{margin-top:24px;background:#000;border-radius:12px;height:150px;position:relative;overflow:hidden}
+  .mini-canvas svg{width:100%;height:100%;display:block}
+  .hud{position:absolute;font-family:var(--mono);font-size:9px;color:#9dbcb0;letter-spacing:.3px}
+  .agent-line{margin-top:16px;display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);border-left:3px solid var(--gold);border-radius:10px;padding:10px 14px}
+  .spark{width:18px;height:18px;flex:none;border-radius:50%;background:radial-gradient(circle at 35% 35%,#e8cf9b,var(--gold));
+    box-shadow:0 0 10px rgba(203,162,88,.5)}
+  .agent-line span{font-size:12px;color:#e6efe9;line-height:1.5}
+
+  /* ── 화면 카드 ── */
+  .screens{max-width:1280px;margin:0 auto;padding:64px 48px 96px}
+  .screens h2{font-size:28px;font-weight:700;color:var(--charcoal);line-height:1.29}
+  .screens p.sub{margin-top:8px;max-width:620px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:32px}
+  .card{background:#fff;border:1px solid var(--lgray);border-radius:16px;box-shadow:var(--sh1);
+    overflow:hidden;transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .25s}
+  .card:hover{transform:translateY(-4px);box-shadow:var(--sh2)}
+  .card .thumb{height:150px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;letter-spacing:.3px}
+  .card .body{padding:20px}
+  .card h3{font-size:18px;font-weight:600;color:var(--charcoal);line-height:1.44}
+  .card p{margin-top:6px;font-size:13px;color:var(--sec)}
+  .card .go{display:inline-block;margin-top:14px;color:var(--green);font-weight:600;font-size:14px}
+  .card .go:hover{text-decoration:underline}
+  .phase{display:inline-block;background:var(--bgray);color:var(--sec);border-radius:9999px;
+    padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:.4px;margin-bottom:10px;text-transform:uppercase}
+
+  footer{background:var(--forest);color:#d4d4d4;padding:40px 48px;font-size:12px}
+  footer b{color:#fff}
+  @media (max-width:900px){
+    .split{grid-template-columns:1fr}
+    .cards{grid-template-columns:1fr}
+    .nav{padding:0 24px}.hero,.screens{padding-left:24px;padding-right:24px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="brand">DCMind<small>프로토타입</small></span>
+  <a class="link" href="worklist.html">워크리스트</a>
+  <a class="link" href="viewer.html">뷰어</a>
+  <a class="link" href="admin.html">관리</a>
+  <span class="spacer"></span>
+  <a class="pill outline" href="worklist.html">화면 보기</a>
+</nav>
+
+<section class="hero">
+  <h1>영상이 흐르고,<br><span class="g">에이전트가 곁에 있는</span> PACS.</h1>
+  <p class="lede">DCMind는 오더부터 판독 리포트까지 병원 영상 워크플로우 전체를 하나의 웹으로 관통합니다.
+  아래는 모든 Phase가 끝났을 때의 최종 모습을 미리 그린 프로토타입입니다.</p>
+</section>
+
+<section class="split" aria-label="두 세계 미리보기">
+  <div class="world light">
+    <span class="tag">업무 화면 · 라이트</span>
+    <h2>업무는 따뜻하게</h2>
+    <p>워크리스트·검색·관리 화면은 웜 오프화이트 위에서 데이터가 말합니다.</p>
+    <div class="mini-rows">
+      <div class="mini-row"><span class="dot" style="background:var(--berry)"></span><b>김민준</b><span class="mono">ACC-20260717-0031</span><span style="color:var(--sec)">CT · 흉부</span><span class="badge" style="background:var(--berry);color:#fff">STAT</span></div>
+      <div class="mini-row"><span class="dot" style="background:var(--spring)"></span><b>이서연</b><span class="mono">ACC-20260717-0027</span><span style="color:var(--sec)">CR · 흉부 X선</span><span class="badge" style="background:var(--mist);color:var(--green)">판독대기</span></div>
+      <div class="mini-row"><span class="dot" style="background:var(--green)"></span><b>박도윤</b><span class="mono">ACC-20260717-0019</span><span style="color:var(--sec)">MR · 뇌</span><span class="badge" style="background:var(--green);color:#fff">판독완료</span></div>
+    </div>
+  </div>
+  <div class="world dark">
+    <span class="tag">판독 화면 · 다크</span>
+    <h2>판독은 어둡고 깊게</h2>
+    <p>뷰어 크롬은 가라앉고, 영상의 계조가 주인공이 됩니다.</p>
+    <div class="mini-canvas">
+      <svg viewBox="0 0 400 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <radialGradient id="lung1" cx="50%" cy="50%"><stop offset="0%" stop-color="#3a3a3a"/><stop offset="70%" stop-color="#1c1c1c"/><stop offset="100%" stop-color="#000"/></radialGradient>
+          <filter id="soft"><feGaussianBlur stdDeviation="6"/></filter>
+        </defs>
+        <ellipse cx="150" cy="80" rx="55" ry="62" fill="url(#lung1)" filter="url(#soft)"/>
+        <ellipse cx="250" cy="80" rx="55" ry="62" fill="url(#lung1)" filter="url(#soft)"/>
+        <rect x="192" y="8" width="16" height="140" fill="#2e2e2e" filter="url(#soft)"/>
+        <path d="M110 46 Q200 24 290 46" stroke="#333" stroke-width="5" fill="none" filter="url(#soft)"/>
+        <path d="M104 74 Q200 52 296 74" stroke="#303030" stroke-width="5" fill="none" filter="url(#soft)"/>
+        <path d="M102 102 Q200 82 298 102" stroke="#2b2b2b" stroke-width="5" fill="none" filter="url(#soft)"/>
+      </svg>
+      <span class="hud" style="top:8px;left:10px">김민준 · 남/58</span>
+      <span class="hud" style="top:8px;right:10px">2026-07-17 흉부 CT</span>
+      <span class="hud" style="bottom:8px;left:10px">W 1500 / L -600</span>
+      <span class="hud" style="bottom:8px;right:10px">확대 100%</span>
+    </div>
+    <div class="agent-line"><span class="spark" aria-hidden="true"></span>
+      <span>과거 흉부 CT 2건을 찾았습니다. 2025-11 검사와 비교해 리포트 초안을 준비할까요?</span>
+    </div>
+  </div>
+</section>
+
+<section class="screens">
+  <h2>최종 결과물 화면</h2>
+  <p class="sub">각 화면은 해당 Phase의 산출물이 모두 완성되었을 때의 모습입니다. 카드를 눌러 전체 화면 목업을 확인하세요.</p>
+  <div class="cards">
+    <a class="card" href="worklist.html">
+      <div class="thumb" style="background:linear-gradient(160deg,#f1f8f4,#d4e9e2);color:var(--green)">워크리스트 · 라이트</div>
+      <div class="body">
+        <span class="phase">Phase 1 · 3</span>
+        <h3>워크리스트</h3>
+        <p>오더 접수부터 판독완료까지 — 검사 상태가 흐르는 방사선과의 메인 업무 화면.</p>
+        <span class="go">화면 열기 →</span>
+      </div>
+    </a>
+    <a class="card" href="viewer.html">
+      <div class="thumb" style="background:linear-gradient(160deg,#1e3932,#000);color:var(--mist)">뷰어 + AI · 다크</div>
+      <div class="body">
+        <span class="phase">Phase 2 · 4</span>
+        <h3>판독 뷰어 &amp; 에이전트</h3>
+        <p>다크 캔버스 위의 영상, 곁에 앉은 골드 액센트의 AI 어시스턴트와 리포트 초안.</p>
+        <span class="go">화면 열기 →</span>
+      </div>
+    </a>
+    <a class="card" href="admin.html">
+      <div class="thumb" style="background:linear-gradient(160deg,#fafafa,#ede9e1);color:var(--sec)">관리 대시보드</div>
+      <div class="body">
+        <span class="phase">Phase 3 · 5+</span>
+        <h3>시스템 관리</h3>
+        <p>스토리지 사용량·무결성 검증·수신 현황 — PACS 관리자가 시스템의 건강을 보는 곳.</p>
+        <span class="go">화면 열기 →</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <b>DCMind</b> — 웹 PACS + AI 에이전트 · 이 페이지는 정적 프로토타입입니다. 데이터는 모두 가상의 예시입니다.
+</footer>
+
+</body>
+</html>

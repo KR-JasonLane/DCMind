@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCMind — 워크리스트</title>
+<style>
+  :root{
+    --green:#00704a; --spring:#00a862; --forest:#1e3932; --warm:#f1f8f4; --white:#fafafa;
+    --cream:#ede9e1; --mist:#d4e9e2; --gold:#cba258; --berry:#c44d58; --error:#e75b52;
+    --charcoal:#1e1e1e; --body:#4a4a4a; --sec:#6b6b6b; --dis:#8c8c8c;
+    --border:#d4d4d4; --lgray:#e8e8e8; --bgray:#f2f0eb;
+    --sh1:0 2px 8px rgba(30,57,50,.08); --sh2:0 4px 16px rgba(30,57,50,.12);
+    --sans:"Pretendard Variable",Pretendard,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;
+    --mono:"JetBrains Mono","D2Coding",Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--sans);background:var(--warm);color:var(--body);font-size:14px;line-height:1.57}
+  a{text-decoration:none;color:inherit}
+
+  .nav{position:sticky;top:0;z-index:10;height:72px;background:rgba(250,250,250,.85);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--lgray);display:flex;align-items:center;gap:32px;padding:0 48px}
+  .brand{font-size:22px;font-weight:700;color:var(--green);letter-spacing:-.25px}
+  .nav a.link{font-weight:600;color:var(--charcoal);padding:6px 2px;border-bottom:2px solid transparent}
+  .nav a.link.active{border-bottom-color:var(--green);color:var(--green)}
+  .nav a.link:hover{border-bottom-color:var(--green);color:var(--green)}
+  .nav .spacer{flex:1}
+  .user{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--charcoal)}
+  .avatar{width:36px;height:36px;border-radius:50%;background:var(--forest);color:#fff;display:flex;
+    align-items:center;justify-content:center;font-size:13px;font-weight:700}
+
+  .page{max-width:1280px;margin:0 auto;padding:40px 48px 96px}
+  .head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+  .head h1{font-size:36px;font-weight:700;letter-spacing:-.25px;color:var(--charcoal);line-height:1.22}
+  .head .count{font-size:14px;color:var(--sec);padding-bottom:8px}
+  .head .spacer{flex:1}
+
+  .pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;
+    padding:12px 24px;font-size:14px;font-weight:600;letter-spacing:.3px;min-height:44px;cursor:pointer;border:none;transition:background .15s}
+  .pill.primary{background:var(--green);color:#fff}
+  .pill.primary:hover{background:var(--forest)}
+  .pill.outline{background:transparent;color:var(--green);border:1px solid var(--green)}
+  .pill.outline:hover{background:rgba(0,112,74,.06)}
+
+  /* 필터 바 */
+  .filters{display:flex;gap:12px;align-items:center;margin-top:24px;flex-wrap:wrap}
+  .search{flex:1;min-width:260px;display:flex;align-items:center;gap:10px;background:var(--bgray);
+    border-radius:9999px;padding:12px 20px;color:var(--dis)}
+  .search svg{flex:none}
+  .search input{border:none;background:transparent;outline:none;font:400 15px var(--sans);color:var(--charcoal);width:100%}
+  .search input::placeholder{color:var(--dis)}
+  .chip{border-radius:9999px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;
+    border:1px solid var(--border);background:#fff;color:var(--body);transition:all .15s}
+  .chip:hover{border-color:var(--green);color:var(--green)}
+  .chip.on{background:var(--green);border-color:var(--green);color:#fff}
+
+  /* 상태 요약 스트립 */
+  .strip{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:24px}
+  .stat{background:#fff;border:1px solid var(--lgray);border-radius:16px;padding:16px 20px;box-shadow:var(--sh1)}
+  .stat .label{font-size:12px;font-weight:600;color:var(--sec);letter-spacing:.2px}
+  .stat .value{font-size:28px;font-weight:700;color:var(--charcoal);line-height:1.29;margin-top:2px}
+  .stat .value small{font-size:13px;font-weight:600;color:var(--sec);margin-left:4px}
+  .stat.accent{background:linear-gradient(135deg,var(--green),var(--forest));border:none}
+  .stat.accent .label{color:var(--mist)}
+  .stat.accent .value{color:#fff}
+
+  /* 테이블 */
+  .tablewrap{margin-top:24px;background:#fff;border:1px solid var(--lgray);border-radius:16px;
+    box-shadow:var(--sh1);overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:960px}
+  thead th{position:sticky;top:0;text-align:left;font-size:12px;font-weight:600;letter-spacing:.2px;
+    color:var(--sec);background:var(--white);border-bottom:1px solid var(--lgray);padding:14px 16px;white-space:nowrap}
+  tbody td{height:48px;padding:8px 16px;border-bottom:1px solid var(--lgray);white-space:nowrap;vertical-align:middle}
+  tbody tr{cursor:pointer;transition:background .15s}
+  tbody tr:hover{background:var(--warm)}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr.selected{background:var(--warm);box-shadow:inset 2px 0 0 var(--green), inset -2px 0 0 var(--green)}
+  td .name{font-weight:600;color:var(--charcoal)}
+  td .sub{font-size:12px;color:var(--sec)}
+  .mono{font-family:var(--mono);font-size:13px;color:var(--sec)}
+  .badge{display:inline-block;border-radius:9999px;padding:4px 12px;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;line-height:1}
+  .b-mod{background:var(--mist);color:var(--green);font-weight:600;text-transform:none}
+  .b-stat{background:var(--berry);color:#fff;margin-left:8px}
+  .b-done{background:var(--green);color:#fff}
+  .b-wait{background:transparent;color:var(--green);border:1px solid var(--green)}
+  .b-shot{background:var(--mist);color:var(--green)}
+  .b-order{background:var(--lgray);color:var(--body)}
+  .ai-mark{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--gold)}
+  .ai-mark::before{content:"";width:8px;height:8px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,#e8cf9b,var(--gold))}
+
+  .foot{display:flex;align-items:center;gap:8px;justify-content:flex-end;margin-top:16px;color:var(--sec);font-size:13px}
+  .foot button{border:1px solid var(--border);background:#fff;border-radius:9999px;min-width:36px;height:36px;
+    font:600 13px var(--sans);color:var(--body);cursor:pointer}
+  .foot button.cur{background:var(--green);border-color:var(--green);color:#fff}
+  .foot button:hover:not(.cur){border-color:var(--green);color:var(--green)}
+
+  @media (max-width:900px){
+    .nav{padding:0 24px}.page{padding:24px 24px 64px}
+    .strip{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="index.html">DCMind</a>
+  <a class="link active" href="worklist.html">워크리스트</a>
+  <a class="link" href="viewer.html">뷰어</a>
+  <a class="link" href="admin.html">관리</a>
+  <span class="spacer"></span>
+  <span class="user"><span class="avatar">한</span>한지우 <span style="color:var(--sec);font-weight:400">판독의</span></span>
+</nav>
+
+<main class="page">
+  <div class="head">
+    <h1>워크리스트</h1>
+    <span class="count">2026-07-17 · 총 42건</span>
+    <span class="spacer"></span>
+    <button class="pill outline">내보내기</button>
+    <button class="pill primary">판독 시작</button>
+  </div>
+
+  <div class="filters">
+    <label class="search">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="5" stroke="#6b6b6b" stroke-width="1.6"/><path d="M11 11l3.2 3.2" stroke="#6b6b6b" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <input type="search" placeholder="환자명, 환자 ID, 접수번호 검색" aria-label="스터디 검색">
+    </label>
+    <button class="chip on">오늘</button>
+    <button class="chip">7일</button>
+    <button class="chip">전체 기간</button>
+    <button class="chip">CT</button>
+    <button class="chip">MR</button>
+    <button class="chip">CR</button>
+    <button class="chip">판독대기만</button>
+  </div>
+
+  <div class="strip">
+    <div class="stat accent"><div class="label">판독대기</div><div class="value">12<small>건</small></div></div>
+    <div class="stat"><div class="label">촬영완료</div><div class="value">7<small>건</small></div></div>
+    <div class="stat"><div class="label">오더됨</div><div class="value">5<small>건</small></div></div>
+    <div class="stat"><div class="label">오늘 판독완료</div><div class="value">18<small>건</small></div></div>
+  </div>
+
+  <div class="tablewrap" role="region" aria-label="검사 목록">
+    <table>
+      <thead>
+        <tr>
+          <th>상태</th><th>환자</th><th>환자 ID</th><th>접수번호</th><th>모달리티</th>
+          <th>검사 설명</th><th>영상</th><th>검사일시</th><th>판독의</th><th>AI</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge b-wait">판독대기</span><span class="badge b-stat">STAT</span></td>
+          <td><span class="name">김민준</span> <span class="sub">남/58</span></td>
+          <td class="mono">P-1002941</td>
+          <td class="mono">ACC-20260717-0031</td>
+          <td><span class="badge b-mod">CT</span></td>
+          <td>흉부 CT (조영)</td>
+          <td class="mono">2 / 214</td>
+          <td>07-17 09:42</td>
+          <td>—</td>
+          <td><span class="ai-mark">요약 준비됨</span></td>
+        </tr>
+        <tr class="selected" aria-selected="true">
+          <td><span class="badge b-wait">판독대기</span></td>
+          <td><span class="name">이서연</span> <span class="sub">여/34</span></td>
+          <td class="mono">P-1003288</td>
+          <td class="mono">ACC-20260717-0027</td>
+          <td><span class="badge b-mod">CR</span></td>
+          <td>흉부 X선 (PA)</td>
+          <td class="mono">1 / 1</td>
+          <td>07-17 09:15</td>
+          <td>—</td>
+          <td><span class="ai-mark">요약 준비됨</span></td>
+        </tr>
+        <tr>
+          <td><span class="badge b-shot">촬영완료</span></td>
+          <td><span class="name">최하은</span> <span class="sub">여/71</span></td>
+          <td class="mono">P-1001573</td>
+          <td class="mono">ACC-20260717-0025</td>
+          <td><span class="badge b-mod">MR</span></td>
+          <td>뇌 MR (기본)</td>
+          <td class="mono">6 / 482</td>
+          <td>07-17 08:58</td>
+          <td>—</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="badge b-done">판독완료</span></td>
+          <td><span class="name">박도윤</span> <span class="sub">남/45</span></td>
+          <td class="mono">P-1002114</td>
+          <td class="mono">ACC-20260717-0019</td>
+          <td><span class="badge b-mod">MR</span></td>
+          <td>뇌 MR (조영)</td>
+          <td class="mono">8 / 615</td>
+          <td>07-17 08:21</td>
+          <td>한지우</td>
+          <td><span class="ai-mark">초안 사용</span></td>
+        </tr>
+        <tr>
+          <td><span class="badge b-order">오더됨</span></td>
+          <td><span class="name">정수아</span> <span class="sub">여/29</span></td>
+          <td class="mono">P-1003501</td>
+          <td class="mono">ACC-20260717-0034</td>
+          <td><span class="badge b-mod">US</span></td>
+          <td>복부 초음파</td>
+          <td class="mono">—</td>
+          <td>07-17 예정 11:00</td>
+          <td>—</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="badge b-done">판독완료</span></td>
+          <td><span class="name">오지호</span> <span class="sub">남/63</span></td>
+          <td class="mono">P-1000892</td>
+          <td class="mono">ACC-20260716-0088</td>
+          <td><span class="badge b-mod">CT</span></td>
+          <td>복부-골반 CT</td>
+          <td class="mono">4 / 388</td>
+          <td>07-16 16:44</td>
+          <td>한지우</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="badge b-wait">판독대기</span></td>
+          <td><span class="name">강예린</span> <span class="sub">여/52</span></td>
+          <td class="mono">P-1002667</td>
+          <td class="mono">ACC-20260716-0091</td>
+          <td><span class="badge b-mod">CR</span></td>
+          <td>요추 X선 (AP/LAT)</td>
+          <td class="mono">2 / 2</td>
+          <td>07-16 17:02</td>
+          <td>—</td>
+          <td><span class="ai-mark">요약 준비됨</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="foot">
+    <span>42건 중 1–7</span>
+    <button aria-label="이전 페이지">‹</button>
+    <button class="cur">1</button><button>2</button><button>3</button>
+    <button aria-label="다음 페이지">›</button>
+  </div>
+</main>
+
+</body>
+</html>
