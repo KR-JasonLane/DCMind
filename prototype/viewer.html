@@ -15,7 +15,7 @@
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
   body{font-family:var(--sans);background:var(--forest-deep);color:var(--ink);font-size:14px;line-height:1.57;
-    display:grid;grid-template-rows:64px 1fr;overflow:hidden}
+    display:grid;grid-template-rows:56px 46px 1fr;overflow:hidden}
   a{text-decoration:none;color:inherit}
 
   /* ── 상단 바 ── */
@@ -29,14 +29,46 @@
   .study{font-size:12px;color:var(--mist)}
   .study .badge-stat{background:var(--berry);color:#fff;border-radius:9999px;padding:3px 10px;
     font-size:10px;font-weight:700;letter-spacing:.4px;margin-left:8px;text-transform:uppercase}
-  .tools{margin-left:auto;display:flex;gap:6px}
-  .tool{border:none;background:transparent;color:var(--mist);font:600 12px var(--sans);
-    border-radius:9999px;padding:9px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s}
-  .tool:hover{background:rgba(255,255,255,.07)}
-  .tool.active{background:var(--green);color:#fff}
+  .topbar .spacer{margin-left:auto}
   .leave{background:var(--white);color:var(--green);border:none;border-radius:9999px;
-    padding:10px 18px;font:600 13px var(--sans);letter-spacing:.3px;cursor:pointer;margin-left:12px}
+    padding:9px 16px;font:600 13px var(--sans);letter-spacing:.3px;cursor:pointer}
   .leave:hover{background:#fff}
+
+  /* ── 툴바 (아이콘 버튼 행) ── */
+  .toolbar{background:var(--forest);border-bottom:1px solid var(--line);display:flex;align-items:center;
+    gap:4px;padding:0 12px}
+  .tgroup{display:flex;align-items:center;gap:2px}
+  .tgroup[hidden]{display:none}
+  .tsep{width:1px;height:22px;background:var(--line);margin:0 6px;flex:none}
+  /* 카테고리 콤보박스 */
+  .tcat{appearance:none;-webkit-appearance:none;background:rgba(255,255,255,.06);color:#fff;
+    border:1px solid var(--line);border-radius:9px;padding:8px 30px 8px 12px;font:600 13px var(--sans);cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%239dbcb0' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat;background-position:right 10px center;min-width:82px}
+  .tcat:hover{background-color:rgba(255,255,255,.1)}
+  .tcat:focus-visible{outline:2px solid var(--spring);outline-offset:1px}
+  .tcat option{background:var(--forest);color:#fff}
+  .tbtn{position:relative;width:34px;height:34px;border:none;background:transparent;color:var(--mist);
+    border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
+  .tbtn svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .tbtn:hover{background:rgba(255,255,255,.08);color:#fff}
+  .tbtn.active{background:var(--green);color:#fff}
+  .tbtn.action{color:var(--ink-sec)}
+  /* 호버 툴팁 */
+  .tbtn::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
+    background:#000;color:#fff;font:600 11px var(--sans);letter-spacing:.2px;white-space:nowrap;
+    padding:5px 9px;border-radius:7px;opacity:0;pointer-events:none;transition:opacity .12s;z-index:30}
+  .tbtn::before{content:"";position:absolute;top:calc(100% + 2px);left:50%;transform:translateX(-50%);
+    border:5px solid transparent;border-bottom-color:#000;opacity:0;transition:opacity .12s;z-index:30}
+  .tbtn:hover::after,.tbtn:hover::before{opacity:1}
+  .tbtn:hover::after{transition-delay:.25s}.tbtn:hover::before{transition-delay:.25s}
+  .tbtn:focus-visible{outline:2px solid var(--spring);outline-offset:1px}
+  .tbar-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+  .mkey{font:600 10px var(--sans);letter-spacing:.2px;color:var(--ink-sec);background:rgba(255,255,255,.05);
+    border:1px solid var(--line);border-radius:6px;padding:4px 8px;white-space:nowrap}
+  .mkey b{color:var(--mist);font-weight:700;margin-right:3px}
+  .tstatus{font:600 11px var(--sans);color:var(--spring);padding-left:8px;border-left:1px solid var(--line);white-space:nowrap}
+  @media (max-width:1080px){ .mkey{display:none} }
 
   /* ── 본문 3단 ── */
   .stage{display:grid;grid-template-columns:92px 1fr 380px;min-height:0}
@@ -54,7 +86,7 @@
 
   /* 캔버스 */
   .canvas{position:relative;background:#000;min-width:0}
-  .canvas svg.scan{width:100%;height:100%;display:block}
+  .canvas svg.scan{width:100%;height:100%;display:block;transform-origin:center center}
   .hud{position:absolute;font-family:var(--mono);font-size:11px;color:var(--ink-sec);letter-spacing:.3px;line-height:1.6}
   .hud b{color:var(--mist);font-weight:400}
   /* 측정 오버레이 */
@@ -135,15 +167,63 @@
     <small>P-1002941 · ACC-20260717-0031</small>
   </div>
   <span class="study">흉부 CT (조영) · 2026-07-17 09:42<span class="badge-stat">STAT</span></span>
-  <div class="tools" role="toolbar" aria-label="영상 도구">
-    <button class="tool active">윈도우/레벨</button>
-    <button class="tool">확대</button>
-    <button class="tool">이동</button>
-    <button class="tool">길이 측정</button>
-    <button class="tool">초기화</button>
-  </div>
+  <span class="spacer"></span>
   <a href="worklist.html"><button class="leave">워크리스트로</button></a>
 </header>
+
+<div class="toolbar" role="toolbar" aria-label="영상 도구">
+  <select class="tcat" id="toolCat" aria-label="도구 카테고리">
+    <option value="measure">측정</option>
+    <option value="action">동작</option>
+  </select>
+  <span class="tsep"></span>
+
+  <!-- 측정 도구 -->
+  <div class="tgroup" data-cat="measure">
+    <button class="tbtn" data-tool="length" data-cursor="crosshair" data-tip="길이 (mm)" aria-label="길이 측정">
+      <svg viewBox="0 0 24 24"><path d="M4 20L20 4"/><circle cx="4" cy="20" r="1.6" fill="currentColor" stroke="none"/><circle cx="20" cy="4" r="1.6" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <button class="tbtn" data-tool="angle" data-cursor="crosshair" data-tip="각도 (°)" aria-label="각도 측정">
+      <svg viewBox="0 0 24 24"><path d="M4 20L20 20M4 20L16 6"/><path d="M14 20a10 10 0 0 0-3-6.5"/></svg>
+    </button>
+    <button class="tbtn" data-tool="ellipse" data-cursor="crosshair" data-tip="타원 ROI (면적·HU)" aria-label="타원 ROI">
+      <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="6.5"/></svg>
+    </button>
+    <button class="tbtn" data-tool="rect" data-cursor="crosshair" data-tip="사각 ROI (면적·HU)" aria-label="사각 ROI">
+      <svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1.5"/></svg>
+    </button>
+    <button class="tbtn" data-tool="freehand" data-cursor="crosshair" data-tip="자유곡선 ROI" aria-label="자유곡선 ROI">
+      <svg viewBox="0 0 24 24"><path d="M4 14c1-5 5-7 8-5s2 6 5 6 3-4 3-4"/></svg>
+    </button>
+    <button class="tbtn" data-tool="probe" data-cursor="crosshair" data-tip="포인트 HU 값" aria-label="포인트 HU">
+      <svg viewBox="0 0 24 24"><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <button class="tbtn" data-tool="arrow" data-cursor="crosshair" data-tip="화살표 · 주석" aria-label="화살표 주석">
+      <svg viewBox="0 0 24 24"><path d="M5 19L19 5M19 5h-6M19 5v6"/></svg>
+    </button>
+  </div>
+
+  <!-- 액션 -->
+  <div class="tgroup" data-cat="action" hidden>
+    <button class="tbtn action" data-action="invert" data-tip="흑백 반전" aria-label="흑백 반전">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <button class="tbtn action" data-action="reset" data-tip="초기화" aria-label="초기화">
+      <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.3 5.6"/><path d="M4 20v-4h4"/></svg>
+    </button>
+    <button class="tbtn action" data-action="clear" data-tip="측정 전체 삭제" aria-label="측정 삭제">
+      <svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V5h6v2M7 7l1 12h8l1-12"/></svg>
+    </button>
+  </div>
+
+  <div class="tbar-right">
+    <span class="mkey"><b>좌드래그</b>W/L</span>
+    <span class="mkey"><b>휠</b>슬라이스</span>
+    <span class="mkey"><b>휠클릭</b>이동</span>
+    <span class="mkey"><b>우드래그</b>확대</span>
+    <span class="tstatus" id="toolStatus">도구 없음</span>
+  </div>
+</div>
 
 <div class="stage">
   <!-- 시리즈 스트립 -->
@@ -157,7 +237,7 @@
 
   <!-- 캔버스 -->
   <main class="canvas" aria-label="영상 캔버스">
-    <svg class="scan" viewBox="0 0 800 640" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <svg class="scan" id="scan" viewBox="0 0 800 640" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs>
         <radialGradient id="lungL" cx="50%" cy="50%"><stop offset="0%" stop-color="#464646"/><stop offset="65%" stop-color="#222"/><stop offset="100%" stop-color="#000"/></radialGradient>
         <radialGradient id="lungR" cx="50%" cy="50%"><stop offset="0%" stop-color="#414141"/><stop offset="65%" stop-color="#1f1f1f"/><stop offset="100%" stop-color="#000"/></radialGradient>
@@ -179,10 +259,10 @@
     </svg>
     <span class="hud" style="top:14px;left:16px"><b>김민준</b> · 남/58<br>P-1002941</span>
     <span class="hud" style="top:14px;right:16px;text-align:right"><b>흉부 CT (조영)</b><br>2026-07-17 09:42</span>
-    <span class="hud" style="bottom:14px;left:16px">W 1500 / L -600 · 5.0mm</span>
-    <span class="hud" style="bottom:14px;right:16px">확대 100% · 82 / 214</span>
+    <span class="hud" style="bottom:14px;left:16px"><span id="hudWL">W 1500 / L -600</span> · 5.0mm</span>
+    <span class="hud" style="bottom:14px;right:16px">확대 <span id="hudZoom">100</span>% · <span id="hudSlice">82</span> / 214</span>
     <span class="measure-label">34.2 mm</span>
-    <div class="scroller" aria-hidden="true"><span>82</span><div class="track"><div class="pos"></div></div><span>214</span></div>
+    <div class="scroller" aria-hidden="true"><span id="scrNow">82</span><div class="track"><div class="pos" id="scrPos"></div></div><span>214</span></div>
   </main>
 
   <!-- 우측 패널 -->
@@ -232,6 +312,103 @@
     </div>
   </aside>
 </div>
+
+<script>
+  // 뷰어 인터랙션 데모: 마우스 탐색(W/L·이동·확대·슬라이스) + 측정/동작 도구 토글
+  (function(){
+    var canvas = document.querySelector('.canvas');
+    var scan = document.getElementById('scan');
+    var status = document.getElementById('toolStatus');
+    var toolBtns = document.querySelectorAll('.tbtn[data-tool]');
+    var cat = document.getElementById('toolCat');
+    var groups = document.querySelectorAll('.tgroup[data-cat]');
+    var hudWL = document.getElementById('hudWL');
+    var hudZoom = document.getElementById('hudZoom');
+    var hudSlice = document.getElementById('hudSlice');
+    var scrNow = document.getElementById('scrNow');
+    var scrPos = document.getElementById('scrPos');
+    var measureLabel = document.querySelector('.measure-label');
+    var TOTAL = 214;
+
+    // 뷰 상태
+    var st = {panX:0, panY:0, zoom:1, ww:1500, wl:-600, slice:82, invert:false};
+
+    function applyTransform(){
+      scan.style.transform = 'translate('+st.panX+'px,'+st.panY+'px) scale('+st.zoom.toFixed(3)+')';
+      hudZoom.textContent = Math.round(st.zoom*100);
+    }
+    function applyWL(){
+      // W/L을 CSS 필터로 근사 (프로토타입 시각 효과)
+      var contrast = Math.max(0.2, Math.min(3, st.ww/1500));
+      var brightness = Math.max(0.2, Math.min(2.4, 1 + (-600 - st.wl)/1200));
+      scan.style.filter = 'contrast('+contrast.toFixed(2)+') brightness('+brightness.toFixed(2)+')'+(st.invert?' invert(1)':'');
+      hudWL.textContent = 'W '+Math.round(st.ww)+' / L '+Math.round(st.wl);
+    }
+    function applySlice(){
+      hudSlice.textContent = st.slice; scrNow.textContent = st.slice;
+      scrPos.style.top = ((st.slice-1)/(TOTAL-1)*100)+'%';
+    }
+    function reset(){
+      st.panX=0; st.panY=0; st.zoom=1; st.ww=1500; st.wl=-600; st.slice=82; st.invert=false;
+      applyTransform(); applyWL(); applySlice();
+    }
+
+    // ── 도구 토글 ──
+    var activeTool = null;
+    function deactivateAll(){ toolBtns.forEach(function(b){ b.classList.remove('active'); }); activeTool=null; canvas.style.cursor='default'; status.textContent='도구 없음'; }
+    function activate(btn){ toolBtns.forEach(function(b){ b.classList.remove('active'); }); btn.classList.add('active'); activeTool=btn.getAttribute('data-tool'); canvas.style.cursor=btn.getAttribute('data-cursor')||'default'; status.textContent=btn.getAttribute('data-tip'); }
+
+    cat.addEventListener('change', function(){
+      groups.forEach(function(g){ g.hidden = (g.getAttribute('data-cat')!==cat.value); });
+      deactivateAll();
+    });
+    toolBtns.forEach(function(btn){
+      btn.addEventListener('click', function(){ btn.classList.contains('active') ? deactivateAll() : activate(btn); });
+    });
+    document.querySelectorAll('.tbtn[data-action]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var a = btn.getAttribute('data-action');
+        if(a==='reset') reset();
+        else if(a==='invert'){ st.invert=!st.invert; applyWL(); }
+        else if(a==='clear'){ if(measureLabel) measureLabel.style.display='none'; }
+        status.textContent = btn.getAttribute('data-tip')+' (실행)';
+      });
+    });
+
+    // ── 마우스 탐색 (기본/도구 무관) ──
+    var drag=null, lastX=0, lastY=0;
+    canvas.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+    canvas.addEventListener('mousedown', function(e){
+      lastX=e.clientX; lastY=e.clientY;
+      if(e.button===0){ drag = activeTool ? 'tool' : 'wl'; }        // 좌: 도구 없으면 W/L
+      else if(e.button===1){ drag='pan'; canvas.style.cursor='grabbing'; e.preventDefault(); } // 휠클릭: 이동
+      else if(e.button===2){ drag='zoom'; }                          // 우: 확대/축소
+    });
+    window.addEventListener('mousemove', function(e){
+      if(!drag) return;
+      var dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
+      if(drag==='wl'){ st.ww=Math.max(1, st.ww+dx*4); st.wl=st.wl+dy*4; applyWL(); }
+      else if(drag==='pan'){ st.panX+=dx; st.panY+=dy; applyTransform(); }
+      else if(drag==='zoom'){ st.zoom=Math.max(0.3, Math.min(6, st.zoom*(1-dy*0.005))); applyTransform(); }
+      // drag==='tool' → 측정 도구 그리기(좌표변환·측정 계산)는 Phase 2에서 구현
+    });
+    window.addEventListener('mouseup', function(){
+      if(drag==='pan'){
+        var act = document.querySelector('.tbtn.active[data-tool]');
+        canvas.style.cursor = act ? (act.getAttribute('data-cursor')||'default') : 'default';
+      }
+      drag=null;
+    });
+    canvas.addEventListener('wheel', function(e){
+      e.preventDefault();
+      st.slice += (e.deltaY>0?1:-1);
+      if(st.slice<1) st.slice=1; if(st.slice>TOTAL) st.slice=TOTAL;
+      applySlice();
+    }, {passive:false});
+
+    reset();
+  })();
+</script>
 
 </body>
 </html>
