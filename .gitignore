@@ -42,6 +42,9 @@ logs/
 *.log
 *.tmp
 
+# ─── 테스트용 DICOM 원본 (대용량·PHI 우려로 미추적) ───
+test-data/
+
 # ─── Claude 에이전트 관련 ───
 CLAUDE.md
 CLAUDE.local.md

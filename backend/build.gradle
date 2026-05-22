@@ -1,0 +1,36 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.1.0'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.dcmind'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+	maven { url = 'https://maven.dcm4che.org/' }   // dcm4che 공식 저장소
+	maven { url = 'https://raw.githubusercontent.com/nroduit/mvn-repo/master/' }   // weasis (dcm4che 전이 의존성)
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.dcm4che:dcm4che-core:5.34.0'   // DICOM 파싱 코어
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+// 소스/컴파일 UTF-8 (영구 — 한글 주석·문자열 안전)
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+}
